@@ -1,0 +1,110 @@
+# ------------------------------------------------------------------------------
+# Service Configuration
+# ------------------------------------------------------------------------------
+# Main configuration file for the LocalStack Serverless starter project. Defines
+# core service settings, provider configuration, and environment variables.
+# ------------------------------------------------------------------------------
+service: localstack-serverless-starter
+frameworkVersion: "4"
+
+# ------------------------------------------------------------------------------
+# Package Configuration
+# ------------------------------------------------------------------------------
+# The package configuration controls how Serverless bundles the service. Setting
+# individually to true means each function is packaged separately for optimal
+# deployment size. The excludeDevDependencies flag ensures development
+# dependencies are excluded from the deployment package to reduce size and only
+# include production dependencies needed for runtime execution.
+# ------------------------------------------------------------------------------
+package:
+  individually: true
+  excludeDevDependencies: true
+
+# ------------------------------------------------------------------------------
+# Provider Configuration
+# ------------------------------------------------------------------------------
+# Defines core AWS provider settings including runtime, region, API configuration
+# and environment variables. Uses environment variables with fallbacks for stage
+# and region configuration to support different deployment environments.
+# ------------------------------------------------------------------------------
+provider:
+  name: aws
+  runtime: nodejs20.x
+  versionFunctions: false
+  endpointType: regional
+  stage: ${env:TARGET_STAGE, 'local'}
+  region: ${env:TARGET_REGION, self:custom.defaultRegion}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "*"
+
+  # Environmental variables
+  environment:
+    TEST_ENV_VAR: ${env:TEST_ENV_VAR}
+    TEST_ENV_CONSTANT: ${self:custom.${self:provider.stage}.TEST_ENV_CONSTANT}
+
+# ------------------------------------------------------------------------------
+# Plugins Configuration
+# ------------------------------------------------------------------------------
+# Defines the Serverless plugins required for local development.
+# ------------------------------------------------------------------------------
+plugins:
+  - serverless-localstack
+
+# ------------------------------------------------------------------------------
+# Build Configuration
+# ------------------------------------------------------------------------------
+# Configures the esbuild bundler settings for optimizing Lambda function packages.
+# Excludes AWS SDK to reduce bundle size since it's available in the Lambda
+# runtime. Sets concurrent builds for improved packaging performance.
+# ------------------------------------------------------------------------------
+build:
+  esbuild:
+    exclude:
+      - "@aws-sdk/*"
+    buildConcurrency: 3
+
+# ------------------------------------------------------------------------------
+# Custom Configuration
+# ------------------------------------------------------------------------------
+# Contains all custom variables and settings including LocalStack configuration,
+# environment variables, and stage-specific constants.
+# ------------------------------------------------------------------------------
+custom:
+  localConfig: ${file(./serverless.local.yml):, null}
+  defaultRegion: eu-west-1
+  prune:
+    automatic: true
+    number: 2
+
+  # LocalStack configuration
+  localstack:
+    stages:
+      - local
+    lambda:
+      mountCode: true
+    autostart: true
+
+  # Environment-specific constant overrides for each stage
+  local:
+    TEST_ENV_CONSTANT: "local_constant_override"
+  staging:
+    TEST_ENV_CONSTANT: "staging_constant_override"
+  production:
+    TEST_ENV_CONSTANT: "production_constant_override"
+
+# ------------------------------------------------------------------------------
+# Functions Configuration
+# ------------------------------------------------------------------------------
+# Defines the Lambda functions and their associated configurations including
+# handlers, events, and IAM roles.
+# ------------------------------------------------------------------------------
+functions:
+  example:
+    handler: src/handlers/example.handler
+    timeout: 15
+    events:
+      - http:
+          path: /example
+          method: get

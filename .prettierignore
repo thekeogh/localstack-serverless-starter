@@ -1,0 +1,23 @@
+# Artifacts
+package-lock.json
+
+# Build
+.serverless/
+build/
+.esbuild/
+deploy/
+deployment/
+.github/
+
+# Testing
+coverage/
+
+# Config
+tsconfig.*
+.eslintrc
+.releaserc
+
+# Misc
+*.md
+types/
+.vscode/
