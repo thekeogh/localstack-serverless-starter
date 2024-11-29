@@ -38,9 +38,22 @@ provider:
     cors:
       allowedOrigins:
         - "*"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:BatchWriteItem
+      Resource:
+        - !GetAtt PeopleTable.Arn
+        - !Sub "${PeopleTable.Arn}/index/*"
 
   # Environmental variables
   environment:
+    DYNAMODB_PEOPLE_ARN: { "Fn::GetAtt": ["PeopleTable", "Arn"] }
     TEST_ENV_VAR: ${env:TEST_ENV_VAR}
     TEST_ENV_CONSTANT: ${self:custom.${self:provider.stage}.TEST_ENV_CONSTANT}
 
@@ -51,19 +64,41 @@ provider:
 # ------------------------------------------------------------------------------
 plugins:
   - serverless-localstack
+  - serverless-step-functions
+
+# ------------------------------------------------------------------------------
+# Step Functions Configuration
+# ------------------------------------------------------------------------------
+# Defines the AWS Step Functions state machines used by the service. The state
+# machine definitions are loaded from external YAML files to maintain separation
+# of concerns and improve maintainability.
+# ------------------------------------------------------------------------------
+# ...
+
+# ------------------------------------------------------------------------------
+# DynamoDB Table Resource
+# ------------------------------------------------------------------------------
+# Defines the DynamoDB table used by the service. The table properties are loaded
+# from an external JSON file to maintain configuration consistency between local
+# development and cloud deployments.
+# ------------------------------------------------------------------------------
+resources:
+  - Resources:
+      PeopleTable:
+        Type: AWS::DynamoDB::Table
+        Properties: ${file(./offline/migrations/dynamodb.json):Table}
 
 # ------------------------------------------------------------------------------
 # Build Configuration
 # ------------------------------------------------------------------------------
 # Configures the esbuild bundler settings for optimizing Lambda function packages.
 # Excludes AWS SDK to reduce bundle size since it's available in the Lambda
-# runtime. Sets concurrent builds for improved packaging performance.
+# runtime.
 # ------------------------------------------------------------------------------
 build:
   esbuild:
     exclude:
       - "@aws-sdk/*"
-    buildConcurrency: 3
 
 # ------------------------------------------------------------------------------
 # Custom Configuration
