@@ -11,7 +11,6 @@ export const handler = async (event: APIGatewayEvent): Promise<APIGatewayProxyRe
     statusCode: 200,
     body: JSON.stringify({
       key: process.env.AWS_ACCESS_KEY_ID,
-      DYNAMODB_PEOPLE_ARN: process.env.DYNAMODB_PEOPLE_ARN,
       TEST_ENV_VAR: process.env.TEST_ENV_VAR,
       TEST_ENV_CONSTANT: process.env.TEST_ENV_CONSTANT,
       event,

@@ -53,7 +53,6 @@ provider:
 
   # Environmental variables
   environment:
-    DYNAMODB_PEOPLE_ARN: { "Fn::GetAtt": ["PeopleTable", "Arn"] }
     TEST_ENV_VAR: ${env:TEST_ENV_VAR}
     TEST_ENV_CONSTANT: ${self:custom.${self:provider.stage}.TEST_ENV_CONSTANT}
 
